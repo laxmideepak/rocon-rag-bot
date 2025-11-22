@@ -15,11 +15,5 @@
       "src": "/api/(.*)",
       "dest": "api/index.py"
     }
-  ],
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 60,
-      "memory": 3008
-    }
-  }
+  ]
 }
