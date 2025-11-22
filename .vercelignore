@@ -1,0 +1,16 @@
+# Ignore large files that don't need to be deployed
+data/raw_html/
+*.pyc
+__pycache__/
+.env
+.venv/
+venv/
+test_rag_system.py
+debug_ingest.py
+.git/
+.gitignore
+
+# Keep these (needed for deployment):
+# - vectorstore/ (FAISS index and metadata)
+# - data/docs.jsonl (processed documents)
+

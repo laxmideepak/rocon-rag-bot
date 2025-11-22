@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+requests
+beautifulsoup4
+tqdm
+faiss-cpu
+tiktoken
+python-dotenv
+openai>=1.30.0
+langchain
+langchain-openai
+numpy
+
