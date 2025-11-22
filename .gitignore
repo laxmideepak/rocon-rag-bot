@@ -43,9 +43,12 @@ ENV/
 # Vercel
 .vercel
 
-# Large data files (optional - uncomment if you want to exclude)
-# data/raw_html/
-# vectorstore/
+# RAG-generated artifacts (regenerable)
+data/raw_html/*
+!data/raw_html/.gitkeep
+data/docs.jsonl
+vectorstore/*
+!vectorstore/.gitkeep
 
 # Test files (optional)
 # *.log
