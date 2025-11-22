@@ -111,7 +111,5 @@ async def search(request: SearchRequest):
         raise HTTPException(status_code=500, detail=f"Search error: {str(e)}")
 
 
-# Export for Vercel
-# Vercel will look for 'app' or 'api' variable
-handler = app
-
+# Export for Vercel Python runtime
+# Vercel will automatically detect the FastAPI app

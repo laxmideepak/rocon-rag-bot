@@ -5,6 +5,7 @@ from typing import List, Dict, Tuple, Optional
 
 import faiss
 import numpy as np
+import requests
 from openai import OpenAI
 from collections import defaultdict
 
@@ -128,12 +129,40 @@ def print_index_stats(metadata: List[Dict]):
         print(f"      {cat}: {count}")
 
 
+def download_from_blob(url: str, path: str):
+    """Download file from Vercel Blob Storage."""
+    if not os.path.exists(path):
+        print(f"Downloading {os.path.basename(path)} from blob storage...")
+        try:
+            response = requests.get(url, timeout=60)
+            response.raise_for_status()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'wb') as f:
+                f.write(response.content)
+            print(f"✅ Downloaded {os.path.basename(path)}")
+        except Exception as e:
+            print(f"❌ Error downloading from blob: {e}")
+            raise
+
+
 def load_index() -> Tuple[faiss.Index, Dict]:
     """Load FAISS index and metadata."""
+    # Download from Vercel Blob if URLs are provided and files don't exist
+    blob_faiss_url = os.getenv("VERCEL_BLOB_FAISS_URL")
+    blob_meta_url = os.getenv("VERCEL_BLOB_META_URL")
+    
+    if blob_faiss_url and not os.path.exists(INDEX_PATH):
+        download_from_blob(blob_faiss_url, INDEX_PATH)
+    
+    if blob_meta_url and not os.path.exists(META_PATH):
+        download_from_blob(blob_meta_url, META_PATH)
+    
+    # Check if files exist after potential download
     if not os.path.exists(INDEX_PATH) or not os.path.exists(META_PATH):
         raise FileNotFoundError(
             f"Index not found. Run build_faiss_index() first.\n"
-            f"Expected files:\n  - {INDEX_PATH}\n  - {META_PATH}"
+            f"Expected files:\n  - {INDEX_PATH}\n  - {META_PATH}\n"
+            f"Or set VERCEL_BLOB_FAISS_URL and VERCEL_BLOB_META_URL environment variables."
         )
     
     index = faiss.read_index(INDEX_PATH)

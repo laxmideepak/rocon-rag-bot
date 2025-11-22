@@ -8,18 +8,8 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/(.*)",
       "dest": "api/chat.py"
     }
-  ],
-  "env": {
-    "OPENAI_API_KEY": "@openai_api_key"
-  },
-  "functions": {
-    "api/chat.py": {
-      "maxDuration": 60,
-      "memory": 3008
-    }
-  }
+  ]
 }
-
