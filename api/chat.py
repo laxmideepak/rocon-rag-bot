@@ -63,6 +63,14 @@ async def root():
 async def health():
     """Health check endpoint"""
     try:
+        # Check OpenAI API key
+        from app.config import OPENAI_API_KEY
+        if not OPENAI_API_KEY:
+            return {
+                "status": "unhealthy",
+                "error": "OPENAI_API_KEY not set in environment variables"
+            }
+        
         # Quick test that vectorstore is accessible
         from app.vectorstore import load_index
         index, _ = load_index()
@@ -70,8 +78,16 @@ async def health():
             "status": "healthy",
             "vectors_indexed": index.ntotal
         }
+    except FileNotFoundError as e:
+        return {
+            "status": "unhealthy",
+            "error": f"Vectorstore files not found: {str(e)}"
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Service unhealthy: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "error": str(e)
+        }
 
 
 @app.post("/api/chat", response_model=ChatResponse)

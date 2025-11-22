@@ -7,8 +7,8 @@ load_dotenv()
 
 # API Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY not found in environment variables")
+# Don't raise error at import time - let it fail gracefully in the API
+# This allows the module to be imported even if key is missing (for testing)
 
 DOCS_BASE_URL = os.getenv("DOCS_BASE_URL", "https://docs.roconpaas.io/")
 

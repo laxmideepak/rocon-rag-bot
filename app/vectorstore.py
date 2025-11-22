@@ -1,6 +1,7 @@
 import json
 import os
 import pickle
+from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 
 import faiss
@@ -9,20 +10,24 @@ import requests
 from openai import OpenAI
 from collections import defaultdict
 
-from .config import OPENAI_API_KEY, EMBED_MODEL
+from .config import OPENAI_API_KEY, EMBED_MODEL, BASE_DIR
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-DOCS_PATH = "data/docs.jsonl"
-VS_DIR = "vectorstore"
-INDEX_PATH = os.path.join(VS_DIR, "faiss_index.bin")
-META_PATH = os.path.join(VS_DIR, "metadata.pkl")
+# Use absolute paths based on project root
+DOCS_PATH = BASE_DIR / "data" / "docs.jsonl"
+VS_DIR = BASE_DIR / "vectorstore"
+INDEX_PATH = VS_DIR / "faiss_index.bin"
+META_PATH = VS_DIR / "metadata.pkl"
 
 
 def load_docs() -> List[Dict]:
     """Load pre-chunked documents from JSONL."""
     docs = []
-    with open(DOCS_PATH, encoding="utf-8") as f:
+    docs_path = str(DOCS_PATH)
+    if not os.path.exists(docs_path):
+        raise FileNotFoundError(f"Documents file not found: {docs_path}")
+    with open(docs_path, encoding="utf-8") as f:
         for line in f:
             if line.strip():
                 docs.append(json.loads(line))
@@ -96,10 +101,14 @@ def build_faiss_index():
     print(f"✅ FAISS index created with {index.ntotal} vectors")
     
     # Save index and metadata
-    os.makedirs(VS_DIR, exist_ok=True)
-    faiss.write_index(index, INDEX_PATH)
+    vs_dir = str(VS_DIR)
+    os.makedirs(vs_dir, exist_ok=True)
+    index_path = str(INDEX_PATH)
+    meta_path = str(META_PATH)
     
-    with open(META_PATH, "wb") as f:
+    faiss.write_index(index, index_path)
+    
+    with open(meta_path, "wb") as f:
         pickle.dump({
             "metadata": metadata,
             "chunks": chunks
@@ -147,26 +156,32 @@ def download_from_blob(url: str, path: str):
 
 def load_index() -> Tuple[faiss.Index, Dict]:
     """Load FAISS index and metadata."""
+    # Convert Path objects to strings for file operations
+    index_path = str(INDEX_PATH)
+    meta_path = str(META_PATH)
+    
     # Download from Vercel Blob if URLs are provided and files don't exist
     blob_faiss_url = os.getenv("VERCEL_BLOB_FAISS_URL")
     blob_meta_url = os.getenv("VERCEL_BLOB_META_URL")
     
-    if blob_faiss_url and not os.path.exists(INDEX_PATH):
-        download_from_blob(blob_faiss_url, INDEX_PATH)
+    if blob_faiss_url and not os.path.exists(index_path):
+        download_from_blob(blob_faiss_url, index_path)
     
-    if blob_meta_url and not os.path.exists(META_PATH):
-        download_from_blob(blob_meta_url, META_PATH)
+    if blob_meta_url and not os.path.exists(meta_path):
+        download_from_blob(blob_meta_url, meta_path)
     
     # Check if files exist after potential download
-    if not os.path.exists(INDEX_PATH) or not os.path.exists(META_PATH):
+    if not os.path.exists(index_path) or not os.path.exists(meta_path):
         raise FileNotFoundError(
             f"Index not found. Run build_faiss_index() first.\n"
-            f"Expected files:\n  - {INDEX_PATH}\n  - {META_PATH}\n"
+            f"Expected files:\n  - {index_path}\n  - {meta_path}\n"
+            f"Current working directory: {os.getcwd()}\n"
+            f"BASE_DIR: {BASE_DIR}\n"
             f"Or set VERCEL_BLOB_FAISS_URL and VERCEL_BLOB_META_URL environment variables."
         )
     
-    index = faiss.read_index(INDEX_PATH)
-    with open(META_PATH, "rb") as f:
+    index = faiss.read_index(index_path)
+    with open(meta_path, "rb") as f:
         payload = pickle.load(f)
     
     return index, payload
