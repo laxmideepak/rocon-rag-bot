@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from .config import DOCS_BASE_URL, RAW_HTML_DIR
+from config import DOCS_BASE_URL, RAW_HTML_DIR
 
 # Crawler Configuration
 USER_AGENT = "ROCONDocsBot/1.0 (+https://github.com/yourorg/rocon-docs-bot)"

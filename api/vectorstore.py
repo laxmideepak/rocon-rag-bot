@@ -10,7 +10,7 @@ import requests
 from openai import OpenAI
 from collections import defaultdict
 
-from .config import OPENAI_API_KEY, EMBED_MODEL, BASE_DIR
+from config import OPENAI_API_KEY, EMBED_MODEL, BASE_DIR
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
